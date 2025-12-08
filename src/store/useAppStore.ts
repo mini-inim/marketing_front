@@ -3,7 +3,7 @@ import { create } from 'zustand';
 interface ProductInfo {
   productName: string;
   category: string;
-  keywords: string;
+  keywords: string[];
   targetCustomer: string;
   platform: string;
 }
@@ -21,7 +21,7 @@ interface DetailResult {
 }
 
 interface AppState {
-  sessionId: string;
+  sessionId: string | null;
   productInfo: ProductInfo | null;
   swotResult: SwotResult | null;
   detailResult: DetailResult | null;

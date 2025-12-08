@@ -13,15 +13,15 @@ const api = axios.create({
 export interface ProductInfoRequest {
   product_name: string;
   category: string;
-  keywords: string;
+  keywords: string[]; // (배열 타입으로 정의)
   target_customer: string;
   platform: string;
 }
 
-export interface SwotRequest {
-  days?: number;
-  search_depth?: 'basic' | 'advanced';
-  include_reviews?: boolean;
+export interface SwotRequest extends ProductInfoRequest {
+  days: number;
+  search_depth: 'basic' | 'advanced';
+  include_reviews: boolean;
 }
 
 export interface DetailRequest {

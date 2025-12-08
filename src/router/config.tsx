@@ -14,19 +14,19 @@ const routes: RouteObject[] = [
     element: <HomePage />,
   },
   {
-    path: '/swot',
+    path: '/:sessionId/swot', // 세션 ID 포함
     element: <SwotPage />,
   },
   {
-    path: '/detail',
+    path: '/:sessionId/detail-html', // 세션 ID 포함
     element: <DetailPage />,
   },
   {
-    path: '/chat',
+    path: '/:sessionId/chat', // 세션 ID 포함
     element: <ChatPage />,
   },
   {
-    path: '/result-html',
+    path: '/:sessionId/result-html', // 결과 리포트는 고정 경로 유지 (또는 필요시 수정)
     element: <ResultPage />,
   },
   {

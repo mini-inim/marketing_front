@@ -16,8 +16,6 @@ const Navbar: React.FC = () => {
 
   const navItems = [
     { path: '/', label: '홈' },
-    { path: '/swot', label: 'SWOT 분석' },
-    { path: '/detail', label: '상세페이지' },
     { path: '/chat', label: '챗봇' },
   ];
 
@@ -49,7 +47,7 @@ const Navbar: React.FC = () => {
                   location.pathname === item.path
                     ? isScrolled
                       ? 'text-teal-500'
-                      : 'text-white'
+                      : 'text-black'
                     : isScrolled
                     ? 'text-gray-600 hover:text-teal-500'
                     : 'text-white/80 hover:text-white'

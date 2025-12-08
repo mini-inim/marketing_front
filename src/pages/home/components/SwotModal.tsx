@@ -12,9 +12,11 @@ interface SwotModalProps {
 const SwotModal: React.FC<SwotModalProps> = ({ onClose }) => {
   const navigate = useNavigate();
   
-  // Zustand Store에서 Homepage에서 저장한 데이터 가져오기
   const productInfo = useAppStore((state) => state.productInfo);
+  const sessionId = useAppStore((state) => state.sessionId);
+
   const setSwotResult = useAppStore((state) => state.setSwotResult);
+  
 
   const [formData, setFormData] = useState({
     days: 7,
@@ -40,20 +42,28 @@ const SwotModal: React.FC<SwotModalProps> = ({ onClose }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!productInfo || !sessionId) return; // 상품 정보가 없으면 중단
+
     setLoading(true);
     setError(null);
 
     try {
-      // API 서비스 호출
-      const response = await apiService.executeSwot({
+      const combinedRequest = {
+        session_id: sessionId,
+        product_name: productInfo.productName, 
+        category: productInfo.category,
+        keywords: productInfo.keywords,
+        target_customer: productInfo.targetCustomer,
+        platform: productInfo.platform,
         days: formData.days,
         search_depth: formData.searchDepth,
         include_reviews: formData.includeReviews,
-      });
+      };
+
+      // API 호출
+      const response = await apiService.executeSwot(combinedRequest);
 
       setResult(response);
-      
-      // Zustand Store에 분석 결과 저장
       setSwotResult({
         htmlUrl: response.html_url || '',
         competitorCount: response.competitor_count || 0,
@@ -66,23 +76,31 @@ const SwotModal: React.FC<SwotModalProps> = ({ onClose }) => {
     }
   };
 
-  const handleViewResult = () => {
-    if (result?.html_url) {
-      onClose();
-      // 전체 URL을 생성하여 결과 페이지로 이동
-      navigate('/result-html', { 
-        state: { 
-          url: getFullUrl(result.html_url), 
-          title: 'SWOT 분석 결과' 
-        } 
-      });
-    }
-  };
-
   const handleSkip = () => {
+  onClose();
+  // URL 구조: /xyz-123/detail-html
+  if (sessionId) {
+    navigate(`/${sessionId}/detail-html`);
+  } else {
+    navigate('/detail-html'); // 방어 코드
+  }
+};
+
+const handleViewResult = () => {
+  if (result?.html_url) {
     onClose();
-    navigate('/detail');
-  };
+    // 세션 정보와 함께 결과 페이지로 이동 (State도 함께 활용 가능)
+    navigate(`/${sessionId}/result-html`, { 
+      state: { 
+        url: getFullUrl(result.html_url), 
+        title: 'SWOT 분석 결과',
+        sessionId: sessionId 
+      } 
+    });
+  }
+};
+
+
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">

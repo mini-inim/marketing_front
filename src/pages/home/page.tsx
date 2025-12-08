@@ -8,6 +8,7 @@ import SwotModal from './components/SwotModal';
 
 const HomePage: React.FC = () => {
   const setProductInfo = useAppStore((state) => state.setProductInfo);
+  const setSessionId = useAppStore((state) => state.setSessionId);
 
   const [formData, setFormData] = useState({
     productName: '',
@@ -34,50 +35,59 @@ const HomePage: React.FC = () => {
     }
   };
 
-  // 공통 로직: 서버에 상품 정보 등록(startUnified) 및 모달 오픈
+  // 헬퍼 함수: 문자열 키워드를 배열로 변환
+  const formatKeywords = (keywordsStr: string): string[] => {
+    if (!keywordsStr) return [];
+    return keywordsStr
+      .split(',') // 쉼표로 분리
+      .map((k) => k.trim()) // 공백 제거
+      .filter((k) => k !== ''); // 빈 값 제거
+  };
+
   const registerAndOpenModal = async (requestData: ProductInfoRequest) => {
     try {
-      // 1. 서버에 통합 시작 API 호출
-      await apiService.startUnified(requestData);
+      
+      const response = await apiService.startUnified(requestData);
+      console.log("response: ", response)
+      
+      if(response.session_id){
+        setSessionId(response.session_id)
+      }
 
-      // 2. 전역 스토어 업데이트 (Zustand)
       setProductInfo({
         productName: requestData.product_name,
         category: requestData.category,
-        keywords: requestData.keywords,
+        keywords: requestData.keywords, // 배열 형태로 저장
         targetCustomer: requestData.target_customer,
         platform: requestData.platform,
       });
 
-      // 3. SWOT 모달 즉시 표시
       setShowSwotModal(true);
     } catch (err) {
-      throw err; // 상위 catch에서 처리
+      throw err;
     }
   };
 
-  // [수정] PDF 제출 핸들러: 파싱 완료 후 즉시 registerAndOpenModal 호출
   const handlePdfSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!pdfFile) return;
-
     setLoading(true);
     setError(null);
 
     try {
-      // 1. PDF 파싱 API 호출
       const parsedData = await apiService.parsePdf(pdfFile);
       
-      // 2. 파싱된 결과로 등록 데이터 구성
       const requestData: ProductInfoRequest = {
         product_name: parsedData.product_name || 'PDF 추출 상품',
         category: parsedData.category || '기타',
-        keywords: parsedData.keywords || '',
+        // (수정) PDF에서 받은 키워드도 서버가 리스트를 기대하면 배열화 처리
+        keywords: Array.isArray(parsedData.keywords) 
+          ? parsedData.keywords 
+          : formatKeywords(parsedData.keywords || ''),
         target_customer: parsedData.target_customer || '미지정',
         platform: parsedData.platform || 'coupang',
       };
 
-      // 3. 바로 서버 등록 및 모달 오픈
       await registerAndOpenModal(requestData);
     } catch (err) {
       setError(err);
@@ -88,26 +98,42 @@ const HomePage: React.FC = () => {
 
   // 직접 입력 제출 핸들러
   const handleFormSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      const requestData: ProductInfoRequest = {
-        product_name: formData.productName,
-        category: formData.category,
-        keywords: formData.keywords,
-        target_customer: formData.targetCustomer,
-        platform: formData.platform,
-      };
+  // 쉼표로 구분된 문자열을 배열로 변환
+  const keywordsArray = formData.keywords
+    .split(',')
+    .map((k) => k.trim())
+    .filter((k) => k !== '');
 
-      await registerAndOpenModal(requestData);
-    } catch (err) {
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
+  const requestData: ProductInfoRequest = {
+    ...formData,
+    product_name: formData.productName,
+    target_customer: formData.targetCustomer,
+    keywords: keywordsArray, // 여기서 배열로 전달
   };
+
+  try {
+    const response = await apiService.startUnified(requestData);
+    
+    // Zustand 스토어에도 동일하게 배열로 저장
+    setProductInfo({
+      ...formData,
+      keywords: keywordsArray,
+    });
+
+    setSessionId(response.session_id)
+
+    console.log("response: ", response)
+    
+    setShowSwotModal(true);
+  } catch (err) {
+    setError(err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-orange-50">
@@ -151,7 +177,70 @@ const HomePage: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">상품명 *</label>
                 <input name="productName" value={formData.productName} onChange={handleInputChange} required className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-teal-500" />
               </div>
-              {/* ... 기타 필드 생략 ... */}
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  카테고리 *
+                </label>
+                <input
+                  type="text"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                  placeholder="예: 전자기기, 오디오"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  키워드 (쉼표로 구분) *
+                </label>
+                <textarea
+                  name="keywords"
+                  value={formData.keywords}
+                  onChange={handleInputChange}
+                  required
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                  placeholder="예: 무선이어폰, 블루투스, 노이즈캔슬링"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  타겟 고객 *
+                </label>
+                <input
+                  type="text"
+                  name="targetCustomer"
+                  value={formData.targetCustomer}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                  placeholder="예: 20-30대 직장인"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  플랫폼 *
+                </label>
+                <select
+                  name="platform"
+                  value={formData.platform}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                >
+                  <option value="coupang">쿠팡</option>
+                  <option value="naver">네이버 쇼핑</option>
+                  <option value="gmarket">G마켓</option>
+                  <option value="11st">11번가</option>
+                </select>
+              </div>
+
               <button type="submit" className="w-full py-4 bg-teal-500 text-white font-bold rounded-lg shadow-md hover:bg-teal-600">
                 분석 시작하기
               </button>
