@@ -1,11 +1,13 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/feature/Navbar';
+import { useAppStore } from '@/store/useAppStore';
 
 const ResultPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { url, title } = location.state || {};
+  const sessionId = useAppStore((state) => state.sessionId);
 
   if (!url) {
     return (
@@ -35,7 +37,16 @@ const ResultPage: React.FC = () => {
             className="w-full h-full border-0"
             style={{ minHeight: 'calc(100vh - 140px)' }}
           />
+          
+          <button
+            onClick={() => navigate(`/${sessionId}/detail-html`)}
+            className="px-6 py-3 bg-teal-500 text-white font-medium rounded-lg hover:bg-teal-600 transition-colors whitespace-nowrap"
+          >
+            상세페이지 제작하기
+          </button>
+          
         </div>
+        
       </div>
     </div>
   );

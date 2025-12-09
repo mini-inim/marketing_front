@@ -25,6 +25,7 @@ export interface SwotRequest extends ProductInfoRequest {
 }
 
 export interface DetailRequest {
+  session_id: string;
   platform: string;
   tone: string;
   image_style: string;

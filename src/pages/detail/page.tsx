@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAppStore } from '../../store/useAppStore';
 import { apiService, getFullUrl } from '../../services/api';
 import LoadingSpinner from '../../components/base/LoadingSpinner';
@@ -10,6 +10,7 @@ const DetailPage: React.FC = () => {
   const navigate = useNavigate();
   const productInfo = useAppStore((state) => state.productInfo);
   const setDetailResult = useAppStore((state) => state.setDetailResult);
+  const { sessionId } = useParams<{sessionId: string}>();
 
   const [formData, setFormData] = useState({
     platform: 'coupang',
@@ -39,6 +40,7 @@ const DetailPage: React.FC = () => {
 
     try {
       const response = await apiService.executeDetail({
+        session_id: sessionId,
         platform: formData.platform,
         tone: formData.tone,
         image_style: formData.imageStyle,
@@ -54,12 +56,6 @@ const DetailPage: React.FC = () => {
       setError(err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleViewResult = () => {
-    if (result?.html_url) {
-      navigate('/result-html', { state: { url: getFullUrl(result.html_url), title: '상세페이지 결과' } });
     }
   };
 
@@ -129,14 +125,17 @@ const DetailPage: React.FC = () => {
                 )}
 
                 <div className="flex gap-4">
-                  <button
-                    onClick={handleViewResult}
-                    className="flex-1 py-3 bg-teal-500 text-white font-semibold rounded-lg hover:bg-teal-600 transition-colors whitespace-nowrap"
+                  <a
+                    href={getFullUrl(result.html_url)} // 반환된 HTML 파일의 전체 URL
+                    download={`상세페이지_${productInfo?.productName || '결과'}.html`} // 다운로드 파일 이름 지정
+                    target="_blank" // 새 탭에서 열릴 수도 있지만, download 속성이 우선
+                    className="flex-1 py-3 bg-teal-500 text-white font-semibold rounded-lg hover:bg-teal-600 transition-colors whitespace-nowrap text-center"
+                    rel="noopener noreferrer"
                   >
-                    HTML 결과 보기
-                  </button>
+                    결과 다운로드
+                  </a>
                   <button
-                    onClick={() => navigate('/chat')}
+                    onClick={() => navigate(`/${sessionId}/chat`)}
                     className="flex-1 py-3 bg-purple-500 text-white font-semibold rounded-lg hover:bg-purple-600 transition-colors whitespace-nowrap"
                   >
                     AI 챗봇 상담
