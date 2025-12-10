@@ -17,6 +17,7 @@ const Navbar: React.FC = () => {
 
   const navItems = [
     { path: '/', label: '홈' },
+    { path: '/chat', label: "챗봇"}
   ];
 
   return (

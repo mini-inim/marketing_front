@@ -140,7 +140,7 @@ const HomePage: React.FC = () => {
       <Navbar />
       
       <div className="pt-32 pb-20 px-6 text-center">
-        <h1 className="text-5xl font-bold text-gray-900 mb-6">AI 마케팅 자동화</h1>
+        <h1 className="text-5xl font-bold text-gray-900 mb-6">SellFlow AI</h1>
         <p className="text-lg text-gray-600">정보를 입력하거나 PDF를 업로드하여 분석을 시작하세요</p>
       </div>
 
