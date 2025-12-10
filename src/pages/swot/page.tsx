@@ -47,13 +47,18 @@ const SwotPage: React.FC = () => {
         days: formData.days,
         search_depth: formData.searchDepth,
         include_reviews: formData.includeReviews,
+        product_name: '',
+        category: '',
+        keywords: [],
+        target_customer: '',
+        platform: ''
       });
 
       setResult(response);
       setSwotResult({
         htmlUrl: response.html_url || '',
         competitorCount: response.competitor_count || 0,
-        analysisResult: response,
+        analysis_result: response,
       });
     } catch (err) {
       setError(err);

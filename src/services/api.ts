@@ -34,8 +34,6 @@ export interface DetailRequest {
 export interface ChatRequest {
   message: string;
   session_id: string;
-  session_context: {};
-  product_info?: any;
   history?: Array<{ role: string; content: string }>;
 }
 
@@ -75,6 +73,11 @@ export const apiService = {
     const response = await api.post('/api/chatbot/chat', data);
     return response.data;
   },
+
+  getUnifiedSessionContext: async (sessionId: string) => {
+        const response = await api.get(`/api/unified/session/${sessionId}`);
+        return response.data;
+    },
 };
 
 export const getFullUrl = (relativePath: string) => {

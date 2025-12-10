@@ -67,7 +67,7 @@ const SwotModal: React.FC<SwotModalProps> = ({ onClose }) => {
       setSwotResult({
         htmlUrl: response.html_url || '',
         competitorCount: response.competitor_count || 0,
-        analysisResult: response,
+        analysis_result: response,
       });
     } catch (err) {
       setError(err);
