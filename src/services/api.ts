@@ -34,6 +34,7 @@ export interface DetailRequest {
 export interface ChatRequest {
   message: string;
   session_id: string;
+  session_context: {};
   product_info?: any;
   history?: Array<{ role: string; content: string }>;
 }

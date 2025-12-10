@@ -11,6 +11,7 @@ interface Message {
 const ChatPage: React.FC = () => {
   const sessionId = useAppStore((state) => state.sessionId);
   const productInfo = useAppStore((state) => state.productInfo);
+  const swotResult = useAppStore((state)=>state.swotResult)
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -40,29 +41,50 @@ const ChatPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await apiService.chat({
-        message: input,
-        session_id: sessionId,
-        product_info: productInfo,
-        history: messages.map((msg) => ({
-          role: msg.role,
-          content: msg.content,
-        })),
-      });
+        const response = await apiService.chat({
+            message: input,
+            session_id: sessionId,
+            product_info: productInfo,
+            session_context: swotResult || '', 
+            history: messages.map((msg) => ({
+                role: msg.role,
+                content: msg.content,
+            })),
+        });
 
-      const assistantMessage: Message = {
-        role: 'assistant',
-        content: response.response || response.message || '응답을 받지 못했습니다.',
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
+        // 🚨 디버깅: 응답이 정확히 들어왔는지 확인
+        console.log("Chat API 응답:", response); 
+
+        let content: string = '응답을 받지 못했습니다. (필드 없음)';
+        
+        // 백엔드 응답 구조에 맞게 response.response에서 내용을 추출
+        if (response && typeof response.response === 'string' && response.response.length > 0) {
+            content = response.response;
+        }
+
+        const assistantMessage: Message = {
+            role: 'assistant',
+            content: content,
+        };
+
+        // 🚨 상태 업데이트: 함수형 업데이트 사용
+        setMessages((prev) => {
+            const newState = [...prev, assistantMessage];
+            // 메시지 상태가 업데이트된 후, 스크롤을 확실히 내립니다.
+            // (useEffect가 있지만, 즉시 반영을 위해 여기서 한 번 더 호출)
+            setTimeout(scrollToBottom, 50); 
+            return newState;
+        });
+
     } catch (error) {
-      const errorMessage: Message = {
-        role: 'assistant',
-        content: '죄송합니다. 오류가 발생했습니다. 다시 시도해주세요.',
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+        console.error('Chat API 호출 실패:', error);
+        const errorMessage: Message = {
+            role: 'assistant',
+            content: '죄송합니다. 서버 통신 중 오류가 발생했습니다.',
+        };
+        setMessages((prev) => [...prev, errorMessage]);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 

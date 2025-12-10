@@ -30,6 +30,10 @@ const routes: RouteObject[] = [
     element: <ResultPage />,
   },
   {
+    path: '/chat',
+    element: <ChatPage/>
+  },
+  {
     path: '*',
     element: <NotFound />,
   },
